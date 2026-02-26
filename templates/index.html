@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Microalgae Paper Search</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem auto; max-width: 920px; line-height: 1.4; }
+      form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; align-items: end; }
+      input[type="text"], input[type="number"] { width: 100%; padding: 0.5rem; }
+      .results { margin-top: 1.5rem; }
+      .paper { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+      .meta { color: #555; font-size: 0.95rem; }
+      .error { padding: 0.75rem; background: #fff1f1; border: 1px solid #f0bcbc; margin-top: 1rem; }
+      .keywords { font-size: 0.9rem; color: #2f5b2f; }
+    </style>
+  </head>
+  <body>
+    <h1>Recent paper search</h1>
+    <form method="post" action="/search">
+      <label>Topic
+        <input type="text" name="topic" value="{{ topic }}" />
+      </label>
+      <label>Days
+        <input type="number" name="days" min="1" max="365" value="{{ days }}" />
+      </label>
+      <label>Max results
+        <input type="number" name="max_results" min="1" max="100" value="{{ max_results }}" />
+      </label>
+      <label><input type="checkbox" name="include_preprints" {% if include_preprints %}checked{% endif %} /> Include preprints</label>
+      <button type="submit">Search</button>
+    </form>
+
+    {% if error %}
+      <div class="error">{{ error }}{% if source_unavailable %} (source_unavailable: true){% endif %}</div>
+    {% endif %}
+
+    <div class="results">
+      <p>Sources used: {{ sources_used|join(', ') if sources_used else 'none' }}</p>
+      {% for paper in papers %}
+        <article class="paper">
+          <h3><a href="{{ paper.url }}" target="_blank" rel="noreferrer">{{ paper.title }}</a></h3>
+          <div class="meta"><strong>{{ paper.venue }}</strong> • {{ paper.published_date or 'N/A' }} • score: {{ '%.3f' % paper.score }}</div>
+          <div class="meta">Authors: {{ paper.authors|join(', ') if paper.authors else 'N/A' }}</div>
+          <div class="meta">DOI/URL: {% if paper.doi %}{{ paper.doi }}{% else %}{{ paper.url }}{% endif %}</div>
+          {% if paper.abstract_snippet %}<p>{{ paper.abstract_snippet }}</p>{% endif %}
+          <div class="keywords">Matched keywords: {{ paper.matched_keywords|join(', ') if paper.matched_keywords else 'none' }}</div>
+        </article>
+      {% endfor %}
+    </div>
+  </body>
+</html>
